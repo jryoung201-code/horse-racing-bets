@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Horse Racing Bets</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="sky"></div>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <p class="kicker">Pari-mutuel dirt track</p>
+        <h1>Horse Racing Bets</h1>
+      </div>
+      <div class="top-meta" id="topMeta" hidden>
+        <span class="pill" id="roomPill"></span>
+        <span class="pill cash" id="cashPill"></span>
+      </div>
+    </header>
+
+    <section class="gate" id="gate">
+      <div class="card">
+        <h2>Saddle up</h2>
+        <p class="lede">Everyone starts with <strong>$100</strong>. Play here in same-device multiplayer. Add friends on this phone, click a name to bet as them, then race.</p>
+        <label>Your name
+          <input id="nameInput" maxlength="16" placeholder="Jockey name" autocomplete="nickname" />
+        </label>
+        <div class="row">
+          <button class="btn gold" id="localBtn">Start race table</button>
+        </div>
+        <p class="error" id="gateError"></p>
+      </div>
+    </section>
+
+    <section class="table" id="table" hidden>
+      <div class="track-wrap">
+        <div class="race-banner">
+          <span id="phaseLabel">Lobby</span>
+          <span id="bannerMsg">Waiting for players…</span>
+          <span id="timer"></span>
+        </div>
+        <div class="track" id="track"></div>
+        <div class="finish-flag">FINISH</div>
+      </div>
+
+      <div class="board">
+        <div class="card slim">
+          <h3>The field</h3>
+          <div id="oddsBoard" class="odds"></div>
+        </div>
+        <div class="card slim">
+          <h3>Jockeys</h3>
+          <ul id="players" class="players"></ul>
+          <div class="host-actions" id="hostActions"></div>
+        </div>
+      </div>
+
+      <div class="bet-bar" id="betBar" hidden>
+        <p>Bet on a horse — min $5</p>
+        <div class="row">
+          <input type="number" id="betAmt" min="5" step="5" value="10" />
+          <button class="btn ghost" id="clearBetBtn">Clear bet</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
