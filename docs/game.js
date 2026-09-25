@@ -20,6 +20,23 @@ const els = {
   startRaceBtn: $("startRaceBtn"), startRaceBtn2: $("startRaceBtn2"),
 };
 let meId = "p1", state = null, selectedHorse = 0, localRoom = null, tick = null;
+
+function emptyBets() { return {}; }
+function betTotal(p) {
+  return Object.values(p.bets || {}).reduce((a, n) => a + n, 0);
+}
+function betList(p, horses) {
+  return Object.entries(p.bets || {})
+    .filter(([, amt]) => amt > 0)
+    .map(([id, amt]) => {
+      const h = horses.find((x) => x.id === Number(id));
+      return "$" + amt + " " + (h ? h.name : "?");
+    });
+}
+function newPlayer(id, name) {
+  return { id, name, money: STARTING_CASH, bets: emptyBets(), lastPayout: 0 };
+}
+
 function generateField() {
   return HORSES.map((h) => {
     const form = 0.55 + Math.random() * 0.9;
@@ -77,22 +94,28 @@ function render(s) {
   if (s.phase === "betting" && s.bettingEndsAt) {
     els.timer.textContent = Math.max(0, Math.ceil((s.bettingEndsAt - Date.now()) / 1000)) + "s";
   } else els.timer.textContent = "";
-  const racing = s.phase === "racing";
-  els.startRaceBtn.disabled = racing;
-  els.startRaceBtn.textContent = s.phase === "betting" ? "Start race" : s.phase === "results" ? "Start next race" : "Start race";
+  els.startRaceBtn.disabled = s.phase === "racing";
+  els.startRaceBtn.textContent = s.phase === "results" ? "Start next race" : "Start race";
   els.oddsBoard.innerHTML = "";
   s.horses.forEach((h) => {
+    const mine = player && player.bets ? (player.bets[h.id] || 0) : 0;
+    const tickets = s.players.reduce((n, p) => n + ((p.bets && p.bets[h.id]) ? 1 : 0), 0);
     const row = document.createElement("button");
-    row.className = "odd-row" + (selectedHorse === h.id ? " selected" : "");
-    row.innerHTML = `<div class="dot" style="background:${h.color}">${h.emoji}</div><div>${h.name}</div><div class="price">${h.odds}:1</div><div class="muted">${s.players.filter((p) => p.betHorse === h.id).length} bets</div>`;
-    row.onclick = () => { selectedHorse = h.id; if (s.phase === "betting") placeBet(); render(state); };
+    row.className = "odd-row" + (mine ? " selected" : "");
+    row.innerHTML = `<div class="dot" style="background:${h.color}">${h.emoji}</div><div>${h.name}${mine ? " · you $" + mine : ""}</div><div class="price">${h.odds}:1</div><div class="muted">${tickets} bets</div>`;
+    row.onclick = () => {
+      selectedHorse = h.id;
+      if (s.phase === "betting") placeBet(h.id);
+      else render(state);
+    };
     els.oddsBoard.appendChild(row);
   });
   els.players.innerHTML = "";
   [...s.players].sort((a, b) => b.money - a.money).forEach((p) => {
     const li = document.createElement("li");
-    const bet = p.betAmount ? `bet $${p.betAmount}` : p.lastPayout ? `won $${p.lastPayout}` : "no bet";
-    li.innerHTML = `<span class="${p.id === meId ? "you" : ""}">${p.name}${p.id === meId ? " (betting)" : ""}</span><span>$${p.money} \u00b7 ${bet}</span>`;
+    const tickets = betList(p, s.horses);
+    const bet = tickets.length ? tickets.join(", ") : p.lastPayout ? "won $" + p.lastPayout : "no bet";
+    li.innerHTML = `<span class="${p.id === meId ? "you" : ""}">${p.name}${p.id === meId ? " (betting)" : ""}</span><span>$${p.money} · ${bet}</span>`;
     li.onclick = () => { meId = p.id; render(localRoom); };
     els.players.appendChild(li);
   });
@@ -102,8 +125,8 @@ function render(s) {
   els.betBar.hidden = s.phase !== "betting";
   renderTrack(s, s.phase === "racing");
 }
-function placeBet() {
-  localAction("bet", { horseId: selectedHorse, amount: Number(els.betAmt.value) });
+function placeBet(horseId) {
+  localAction("bet", { horseId, amount: Number(els.betAmt.value) });
 }
 els.clearBetBtn.onclick = () => localAction("clearBet");
 els.startRaceBtn.onclick = onStartRace;
@@ -113,21 +136,21 @@ els.nameInput.addEventListener("keydown", (e) => { if (e.key === "Enter") startL
 function startLocal() {
   const name = els.nameInput.value.trim() || "Player 1";
   meId = "p1";
-  localRoom = { phase: "lobby", horses: generateField(), players: [{ id: "p1", name, money: STARTING_CASH, betHorse: null, betAmount: 0, lastPayout: 0 }], race: null, bettingEndsAt: null, message: "Add players, then hit Start race." };
+  localRoom = { phase: "lobby", horses: generateField(), players: [newPlayer("p1", name)], race: null, bettingEndsAt: null, message: "Add players, then hit Start race." };
   els.gate.hidden = true; els.table.hidden = false; els.topMeta.hidden = false;
   render(localRoom);
 }
 function addLocalPlayer() {
   const n = prompt("Name for the next jockey?"); if (!n) return;
-  localRoom.players.push({ id: "p" + (localRoom.players.length + 1), name: n.trim().slice(0, 16), money: STARTING_CASH, betHorse: null, betAmount: 0, lastPayout: 0 });
+  localRoom.players.push(newPlayer("p" + (localRoom.players.length + 1), n.trim().slice(0, 16)));
   localRoom.message = n.trim() + " saddled up."; render(localRoom);
 }
 function localAction(name, payload) {
   const room = localRoom;
   if (name === "openBetting") {
     room.phase = "betting"; room.horses = generateField(); room.race = null;
-    room.message = "Place your bets, then hit Start race!";
-    room.players.forEach((p) => { p.betHorse = null; p.betAmount = 0; p.lastPayout = 0; });
+    room.message = "Tap horses to split your cash. Then Start race.";
+    room.players.forEach((p) => { p.bets = emptyBets(); p.lastPayout = 0; });
     room.bettingEndsAt = Date.now() + BETTING_SECONDS * 1000; render(room);
     clearInterval(tick);
     tick = setInterval(() => {
@@ -140,15 +163,21 @@ function localAction(name, payload) {
   if (name === "bet") {
     if (room.phase !== "betting") return;
     const player = room.players.find((p) => p.id === meId);
+    if (!player.bets) player.bets = emptyBets();
     const amt = Math.floor(Number(payload.amount));
-    if (!Number.isFinite(amt) || amt < MIN_BET || amt > player.money + (player.betAmount || 0)) return;
-    if (player.betAmount) player.money += player.betAmount;
-    player.money -= amt; player.betHorse = Number(payload.horseId); player.betAmount = amt; render(room); return;
+    const hid = Number(payload.horseId);
+    if (!Number.isFinite(amt) || amt < MIN_BET) return;
+    if (amt > player.money) return;
+    player.money -= amt;
+    player.bets[hid] = (player.bets[hid] || 0) + amt;
+    render(room); return;
   }
   if (name === "clearBet") {
     const player = room.players.find((p) => p.id === meId);
-    if (!player || !player.betAmount) return;
-    player.money += player.betAmount; player.betHorse = null; player.betAmount = 0; render(room); return;
+    if (!player) return;
+    player.money += betTotal(player);
+    player.bets = emptyBets();
+    render(room); return;
   }
   if (name === "startRaceNow") {
     if (room.phase !== "betting") return;
@@ -157,9 +186,10 @@ function localAction(name, payload) {
     setTimeout(() => {
       const winner = room.horses.find((h) => h.id === room.race.winner);
       room.players.forEach((p) => {
-        p.lastPayout = 0;
-        if (p.betHorse === winner.id && p.betAmount > 0) { p.lastPayout = Math.round(p.betAmount * winner.odds); p.money += p.lastPayout; }
-        p.betHorse = null; p.betAmount = 0;
+        const stake = (p.bets && p.bets[winner.id]) || 0;
+        p.lastPayout = stake > 0 ? Math.round(stake * winner.odds) : 0;
+        p.money += p.lastPayout;
+        p.bets = emptyBets();
       });
       room.phase = "results"; room.message = winner.emoji + " " + winner.name + " wins at " + winner.odds + ":1!"; render(room);
     }, Math.ceil(room.race.duration * 1000) + 900);

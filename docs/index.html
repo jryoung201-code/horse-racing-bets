@@ -26,7 +26,7 @@
     <section class="gate" id="gate">
       <div class="card">
         <h2>Saddle up</h2>
-        <p class="lede">Everyone starts with <strong>$100</strong>. Play here in same-device multiplayer. Add friends on this phone, click a name to bet as them, then race.</p>
+        <p class="lede">Everyone starts with <strong>$100</strong>. Split your bankroll across as many horses as you want.</p>
         <label>Your name
           <input id="nameInput" maxlength="16" placeholder="Jockey name" autocomplete="nickname" />
         </label>
@@ -63,10 +63,10 @@
       </div>
 
       <div class="bet-bar" id="betBar" hidden>
-        <p>Bet on a horse — min $5</p>
+        <p>Tap horses to add tickets. Amount is added to that horse only — min $5 each.</p>
         <div class="row">
           <input type="number" id="betAmt" min="5" step="5" value="10" />
-          <button class="btn ghost" id="clearBetBtn">Clear bet</button>
+          <button class="btn ghost" id="clearBetBtn">Clear all bets</button>
           <button class="btn gold" id="startRaceBtn2">Start race</button>
         </div>
       </div>
