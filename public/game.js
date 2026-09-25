@@ -10,56 +10,78 @@ const HORSES = [
 const track = document.getElementById("track");
 const btn = document.getElementById("startRaceBtn");
 const msg = document.getElementById("msg");
-let racing = false;
 
-function rand01() {
+let racing = false;
+let timer = null;
+let field = [];
+
+function randPx() {
   return Math.round((0.01 + Math.random() * 0.99) * 100) / 100;
 }
 
-function draw(horses, animate) {
+function finishLine() {
+  const lane = track.querySelector(".lane");
+  if (!lane) return 300;
+  return Math.max(80, lane.clientWidth - 40);
+}
+
+function draw() {
   track.innerHTML = "";
-  horses.forEach((h) => {
+  field.forEach((h) => {
     const lane = document.createElement("div");
     lane.className = "lane";
     const horse = document.createElement("div");
     horse.className = "horse";
+    horse.id = "h" + h.id;
     horse.innerHTML = `<div class="silks" style="background:${h.color}">${h.emoji}</div><div class="label">${h.name}  ${h.roll.toFixed(2)}</div>`;
+    horse.style.transform = "translateX(" + h.x + "px)";
     lane.appendChild(horse);
     track.appendChild(lane);
-    if (animate) {
-      const time = 2.2 + (1 - h.roll) * 5.5;
-      horse.style.transition = `transform ${time}s cubic-bezier(.15,.7,.3,1)`;
-      requestAnimationFrame(() => { horse.style.transform = "translateX(92%)"; });
-    }
   });
 }
 
 function rest() {
   racing = false;
+  if (timer) clearInterval(timer);
+  timer = null;
   btn.disabled = false;
   btn.textContent = "Start race";
-  const horses = HORSES.map((h) => ({ ...h, roll: rand01() }));
-  draw(horses, false);
+  field = HORSES.map((h) => ({ ...h, x: 0, roll: randPx() }));
+  draw();
   msg.textContent = "";
-  return horses;
 }
 
-let field = rest();
+function tick() {
+  const line = finishLine();
+  let winner = null;
+  field.forEach((h) => {
+    h.roll = randPx();
+    h.x += h.roll;
+    if (!winner && h.x >= line) winner = h;
+  });
+  field.forEach((h) => {
+    const el = document.getElementById("h" + h.id);
+    if (!el) return;
+    el.style.transform = "translateX(" + h.x + "px)";
+    const label = el.querySelector(".label");
+    if (label) label.textContent = h.name + "  " + h.roll.toFixed(2);
+  });
+  if (winner) {
+    clearInterval(timer);
+    timer = null;
+    racing = false;
+    btn.disabled = false;
+    msg.textContent = winner.emoji + " " + winner.name;
+  }
+}
 
 btn.onclick = () => {
   if (racing) return;
+  rest();
   racing = true;
   btn.disabled = true;
-  field = HORSES.map((h) => ({ ...h, roll: rand01() }));
-  field.sort((a, b) => b.roll - a.roll);
-  draw(field, true);
-  const winner = field[0];
-  const duration = 2.2 + (1 - Math.min(...field.map((h) => h.roll))) * 5.5;
   msg.textContent = "They're off.";
-  setTimeout(() => {
-    msg.textContent = winner.emoji + " " + winner.name + "  " + winner.roll.toFixed(2);
-    btn.disabled = false;
-    btn.textContent = "Start race";
-    racing = false;
-  }, Math.ceil(duration * 1000) + 200);
+  timer = setInterval(tick, 10);
 };
+
+rest();
