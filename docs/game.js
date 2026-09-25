@@ -17,6 +17,7 @@ const els = {
   oddsBoard: $("oddsBoard"), players: $("players"), hostActions: $("hostActions"),
   phaseLabel: $("phaseLabel"), bannerMsg: $("bannerMsg"), timer: $("timer"),
   betBar: $("betBar"), betAmt: $("betAmt"), clearBetBtn: $("clearBetBtn"),
+  startRaceBtn: $("startRaceBtn"), startRaceBtn2: $("startRaceBtn2"),
 };
 let meId = "p1", state = null, selectedHorse = 0, localRoom = null, tick = null;
 function generateField() {
@@ -47,6 +48,11 @@ function simulateRace(horses) {
   }
   return { winner, finishes, duration: Math.max(...finishes.map((f) => f.time)) };
 }
+function onStartRace() {
+  if (!localRoom) return;
+  if (localRoom.phase === "lobby" || localRoom.phase === "results") localAction("openBetting");
+  else if (localRoom.phase === "betting") localAction("startRaceNow");
+}
 function renderTrack(s, animate) {
   els.track.innerHTML = "";
   s.horses.forEach((h, idx) => {
@@ -71,6 +77,9 @@ function render(s) {
   if (s.phase === "betting" && s.bettingEndsAt) {
     els.timer.textContent = Math.max(0, Math.ceil((s.bettingEndsAt - Date.now()) / 1000)) + "s";
   } else els.timer.textContent = "";
+  const racing = s.phase === "racing";
+  els.startRaceBtn.disabled = racing;
+  els.startRaceBtn.textContent = s.phase === "betting" ? "Start race" : s.phase === "results" ? "Start next race" : "Start race";
   els.oddsBoard.innerHTML = "";
   s.horses.forEach((h) => {
     const row = document.createElement("button");
@@ -88,16 +97,6 @@ function render(s) {
     els.players.appendChild(li);
   });
   els.hostActions.innerHTML = "";
-  if (s.phase === "lobby" || s.phase === "results") {
-    const b = document.createElement("button"); b.className = "btn gold";
-    b.textContent = s.phase === "lobby" ? "Open betting" : "Next race";
-    b.onclick = () => localAction("openBetting"); els.hostActions.appendChild(b);
-  }
-  if (s.phase === "betting") {
-    const b = document.createElement("button"); b.className = "btn";
-    b.textContent = "Start race now"; b.onclick = () => localAction("startRaceNow");
-    els.hostActions.appendChild(b);
-  }
   const add = document.createElement("button"); add.className = "btn ghost";
   add.textContent = "Add player"; add.onclick = addLocalPlayer; els.hostActions.appendChild(add);
   els.betBar.hidden = s.phase !== "betting";
@@ -107,12 +106,14 @@ function placeBet() {
   localAction("bet", { horseId: selectedHorse, amount: Number(els.betAmt.value) });
 }
 els.clearBetBtn.onclick = () => localAction("clearBet");
+els.startRaceBtn.onclick = onStartRace;
+els.startRaceBtn2.onclick = onStartRace;
 els.localBtn.onclick = startLocal;
 els.nameInput.addEventListener("keydown", (e) => { if (e.key === "Enter") startLocal(); });
 function startLocal() {
   const name = els.nameInput.value.trim() || "Player 1";
   meId = "p1";
-  localRoom = { phase: "lobby", horses: generateField(), players: [{ id: "p1", name, money: STARTING_CASH, betHorse: null, betAmount: 0, lastPayout: 0 }], race: null, bettingEndsAt: null, message: "Add players, then open betting." };
+  localRoom = { phase: "lobby", horses: generateField(), players: [{ id: "p1", name, money: STARTING_CASH, betHorse: null, betAmount: 0, lastPayout: 0 }], race: null, bettingEndsAt: null, message: "Add players, then hit Start race." };
   els.gate.hidden = true; els.table.hidden = false; els.topMeta.hidden = false;
   render(localRoom);
 }
@@ -125,7 +126,7 @@ function localAction(name, payload) {
   const room = localRoom;
   if (name === "openBetting") {
     room.phase = "betting"; room.horses = generateField(); room.race = null;
-    room.message = "Place your bets!";
+    room.message = "Place your bets, then hit Start race!";
     room.players.forEach((p) => { p.betHorse = null; p.betAmount = 0; p.lastPayout = 0; });
     room.bettingEndsAt = Date.now() + BETTING_SECONDS * 1000; render(room);
     clearInterval(tick);

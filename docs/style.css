@@ -64,7 +64,7 @@ input {
   font: inherit;
   width: 100%;
 }
-.row { display: flex; gap: 10px; margin-top: 12px; }
+.row { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
 .btn {
   background: #2a1c14;
   color: var(--cream);
@@ -77,6 +77,15 @@ input {
 }
 .btn.gold { background: var(--gold); color: #1b140e; border-color: transparent; }
 .btn.ghost { background: transparent; }
+.btn.start-race {
+  width: 100%;
+  margin: 0 0 16px;
+  padding: 16px 18px;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 28px;
+  letter-spacing: 0.08em;
+}
+.btn.start-race:disabled { opacity: 0.4; cursor: not-allowed; }
 .error { color: #ff8b7a; min-height: 1.2em; margin-top: 10px; font-size: 14px; }
 .track-wrap {
   position: relative;
