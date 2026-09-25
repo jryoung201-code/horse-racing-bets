@@ -1,7 +1,7 @@
 {
-  "name": "horse-racing-bets",
-  "version": "1.0.0",
-  "description": "Multiplayer horse racing betting game. Everyone starts with $100.",
+  "name": "horse-racing",
+  "version": "2.0.0",
+  "description": "Simple horse race. No betting.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -10,7 +10,6 @@
     "node": ">=18"
   },
   "dependencies": {
-    "express": "^4.21.2",
-    "socket.io": "^4.8.1"
+    "express": "^4.21.2"
   }
 }
