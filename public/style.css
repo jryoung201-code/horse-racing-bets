@@ -11,7 +11,7 @@ body {
   background: linear-gradient(#1e3348 0%, #3a2416 42%, #1a0f0a 100%);
   z-index: -1;
 }
-.app { max-width: 900px; margin: 0 auto; padding: 24px 16px 40px; }
+.app { max-width: 920px; margin: 0 auto; padding: 24px 16px 40px; }
 .track-wrap {
   position: relative;
   background: linear-gradient(#7a4a2e, #5a321c);
@@ -21,24 +21,47 @@ body {
   box-shadow: inset 0 0 0 6px #8b5a38;
   margin-bottom: 16px;
 }
-.track { padding: 12px 0 16px; }
+.track { padding: 10px 0 14px; }
 .lane {
   position: relative;
-  height: 52px;
+  height: 64px;
   margin: 6px 48px 6px 8px;
   background: repeating-linear-gradient(90deg, #6e4128 0 28px, #75462c 28px 56px);
   border-bottom: 1px dashed rgba(244, 230, 195, 0.18);
 }
 .horse {
-  position: absolute; left: 0; top: 6px; height: 40px;
-  display: flex; align-items: center; gap: 8px;
+  position: absolute; left: 0; top: 4px; height: 56px;
+  display: flex; align-items: flex-end; gap: 6px;
   transform: translateX(0);
 }
-.horse .silks {
-  width: 34px; height: 34px; border-radius: 50%;
-  display: grid; place-items: center; font-size: 18px;
+.horse .pony {
+  width: 92px;
+  height: 52px;
+  filter: drop-shadow(1px 2px 1px rgba(0,0,0,.45));
 }
-.horse .label { font-size: 13px; font-weight: 700; text-shadow: 0 1px 2px #000; white-space: nowrap; }
+.horse .label {
+  font-size: 12px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px #000;
+  white-space: nowrap;
+  margin-bottom: 6px;
+}
+.rm {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 50%;
+  background: #2a1810;
+  color: #f4e6c3;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 22px;
+}
+.rm:disabled { opacity: .3; cursor: not-allowed; }
 .finish-flag {
   position: absolute; right: 10px; top: 12px; bottom: 12px;
   writing-mode: vertical-rl;
@@ -49,16 +72,41 @@ body {
   padding: 8px 4px;
 }
 .msg { min-height: 1.4em; margin: 0 0 12px; font-size: 15px; }
-.btn.start-race {
-  width: 100%;
+.btn {
   border: 0;
-  background: var(--gold);
-  color: #1b140e;
   border-radius: 12px;
-  padding: 16px 18px;
+  padding: 12px 16px;
   font-family: "Bebas Neue", sans-serif;
-  font-size: 32px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   cursor: pointer;
 }
-.btn.start-race:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn.gold { background: var(--gold); color: #1b140e; }
+.btn.start-race {
+  width: 100%;
+  padding: 16px 18px;
+  font-size: 32px;
+}
+.btn.start-race:disabled,
+.add-bar button:disabled { opacity: 0.4; cursor: not-allowed; }
+.add-bar {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.add-bar input[type="text"],
+.add-bar input:not([type="color"]) {
+  flex: 1;
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 12px;
+  background: #2a1810;
+  color: var(--cream);
+  font: inherit;
+}
+.add-bar input[type="color"] {
+  width: 52px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
